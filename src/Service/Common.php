@@ -20,7 +20,7 @@ class Common
     {
 
         try {
-            $cackeKey = 'cache-address-'.$address;
+            $cackeKey = 'cache-address-'.$address.'-'.$merchant_id;
 
             // 從獲取座標
             $userLocation = redisx()->get($cackeKey);
@@ -78,18 +78,24 @@ class Common
     // 回调状态过滤
     public static function checkStatusCallback($order_id, $status)
     {
-        // 是900 可以回调
-        if ($status == 900) {
-            return 1;
-        }
-        // backend状态为 909 915 916 时 解锁工作单 但不回调
-        $code_arr = ['909', '915', '916'];
-        if (in_array($status, $code_arr)) {
-            infoLog('checkStatusCallback backend code is 909 915 916');
-            return 0;
-        }
 
-        $open_status_arr = ['901' => 1, '902' => 2, '903' => 3];
-        return $order_id.'-'.$open_status_arr[$status];
+
+        switch ($status){
+            case 900:
+                $result = 1;
+                break;
+            case 909:
+            case 915:
+            case 916:
+                $result = 0;
+                break;
+            case 901:
+            case 902:
+            case 903:
+                $open_status_arr = ['901' => 1, '902' => 2, '903' => 3];
+                $result = $order_id.'-'.$open_status_arr[$status];
+                break;
+        }
+        return $result;
     }
 }
